@@ -18,15 +18,15 @@ if not ok_setup then
   return
 end
 
--- 2) Paths (Windows)
+-- 2) Paths (Linux)
 local data_dir = vim.fn.stdpath("data")
-local mason_dir = data_dir .. "\\mason"
-local jdtls_dir = mason_dir .. "\\packages\\jdtls"
+local mason_dir = data_dir .. "/mason"
+local jdtls_dir = mason_dir .. "/packages/jdtls"
 
 -- Lombok 
-local lombok_jar = mason_dir .. "\\share\\jdtls\\lombok.jar"
+local lombok_jar = mason_dir .. "/share/jdtls/lombok.jar"
 if vim.fn.filereadable(lombok_jar) == 0 then
-  lombok_jar = jdtls_dir .. "\\lombok.jar"
+  lombok_jar = jdtls_dir .. "/lombok.jar"
 end
 if vim.fn.filereadable(lombok_jar) == 0 then
   vim.notify("lombok.jar nao encontrado (mason/share/jdtls/lombok.jar ou mason/packages/jdtls/lombok.jar)", vim.log.levels.ERROR)
@@ -34,10 +34,10 @@ if vim.fn.filereadable(lombok_jar) == 0 then
 end
 
 -- Launcher do JDTLS
-local launcher_list = vim.fn.glob(jdtls_dir .. "\\plugins\\org.eclipse.equinox.launcher_*.jar", false, true)
+local launcher_list = vim.fn.glob(jdtls_dir .. "/plugins/org.eclipse.equinox.launcher_*.jar", false, true)
 local launcher_jar = launcher_list[1]
 if not launcher_jar or launcher_jar == "" then
-  vim.notify("Launcher do JDTLS nao encontrado em: " .. jdtls_dir .. "\\plugins\\", vim.log.levels.ERROR)
+  vim.notify("Launcher do JDTLS nao encontrado em: " .. jdtls_dir .. "/plugins/", vim.log.levels.ERROR)
   return
 end
 
@@ -56,14 +56,14 @@ end
 
 -- 4) Workspace por projeto
 local project_name = vim.fn.fnamemodify(root_dir, ":p:h:t")
-local workspace_dir = data_dir .. "\\site\\java\\workspace-root\\" .. project_name
+local workspace_dir = data_dir .. "/site/java/workspace-root/" .. project_name
 vim.fn.mkdir(workspace_dir, "p")
 
 -- 5) Java do sistema (preferindo JAVA_HOME)
 local java_cmd
 local java_home = os.getenv("JAVA_HOME")
 if java_home and java_home ~= "" then
-  java_cmd = java_home .. "\\bin\\java.exe"
+  java_cmd = java_home .. "/bin/java"
 end
 if not java_cmd or vim.fn.executable(java_cmd) == 0 then
   java_cmd = vim.fn.exepath("java")
@@ -96,7 +96,7 @@ local config = {
     "--add-opens", "java.base/java.lang=ALL-UNNAMED",
 
     "-jar", launcher_jar,
-    "-configuration", jdtls_dir .. "\\config_win",
+    "-configuration", jdtls_dir .. "/config_linux",
     "-data", workspace_dir,
   },
 

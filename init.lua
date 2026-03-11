@@ -65,7 +65,7 @@ vim.opt.expandtab = true
 vim.opt.timeoutlen = 300
 
  --path do python
-vim.g.python3_host_prog = "C:\\Users\\joaog\\AppData\\Local\\Programs\\Python\\Python313\\python.exe"
+vim.g.python3_host_prog = vim.fn.exepath("python3")
 
 --fuction para mudar a cor do highlight do numero da linha
 vim.api.nvim_create_autocmd("ColorScheme", {
@@ -83,13 +83,7 @@ vim.g.mapleader = " "
 
 vim.g.maplocalleader = "\\"
 
--- Configuração específica para Windows (PowerShell)
-if vim.fn.has("win32") == 1 then
-  vim.opt.shell = "powershell.exe"
-  vim.opt.shellcmdflag = "-NoLogo -NoProfile -ExecutionPolicy RemoteSigned -Command [Console]::InputEncoding=[Console]::OutputEncoding=[System.Text.Encoding]::UTF8;"
-  vim.opt.shellquote = ""
-  vim.opt.shellxquote = ""
-end
+vim.opt.shell = "zsh"
 
 
 require("core.keymaps")
