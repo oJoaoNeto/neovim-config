@@ -1,17 +1,13 @@
-return{
-
-  'catppuccin/nvim',
-
-  name = 'catppuccin',
-
+return {
+  "catppuccin/nvim",
+  name = "catppuccin",
   event = "VimEnter",
-
   priority = 1000,
 
   config = function()
-
-    require('catppuccin').setup({
-
+    require("catppuccin").setup({
+      flavour = "macchiato",
+      transparent_background = true,
       integrations = {
         treesitter = true,
         lsp_trouble = false,
@@ -25,16 +21,31 @@ return{
         notify = false,
         noice = true,
       },
+    })
 
-       flavour = 'macchiato',
+    vim.cmd.colorscheme("catppuccin-macchiato")
 
-      transparent_background = false,
+    local function apply_transparency()
+      local groups = {
+        "Normal",
+        "NormalNC",
+        "NormalFloat",
+        "FloatBorder",
+        "SignColumn",
+        "EndOfBuffer",
+        "MsgArea",
+        "WinSeparator",
+      }
 
-      })
+      for _, group in ipairs(groups) do
+        vim.api.nvim_set_hl(0, group, { bg = "none" })
+      end
+    end
 
-      vim.cmd.colorscheme("catppuccin-macchiato")
+    apply_transparency()
+
+    vim.api.nvim_create_autocmd("ColorScheme", {
+      callback = apply_transparency,
+    })
   end,
 }
-
-
-

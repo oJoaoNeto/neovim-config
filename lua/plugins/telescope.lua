@@ -37,6 +37,28 @@ return {
   },
 
   config = function()
+    local ok, ts_parsers = pcall(require, 'nvim-treesitter.parsers')
+    if ok and type(ts_parsers.ft_to_lang) ~= 'function' then
+      local get_lang = vim.treesitter
+        and vim.treesitter.language
+        and vim.treesitter.language.get_lang
+      ts_parsers.ft_to_lang = get_lang or function(ft)
+        return ft
+      end
+    end
+
+    local ok_cfg, ts_configs = pcall(require, 'nvim-treesitter.configs')
+    if not ok_cfg then
+      package.loaded['nvim-treesitter.configs'] = {
+        is_enabled = function()
+          return false
+        end,
+      }
+    elseif type(ts_configs.is_enabled) ~= 'function' then
+      ts_configs.is_enabled = function()
+        return false
+      end
+    end
 
     require('telescope').setup({})
   end

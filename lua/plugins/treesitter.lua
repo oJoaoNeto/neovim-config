@@ -10,32 +10,8 @@ return {
     },
 
     config = function()
-      local languages = {
-        "lua",
-        "vim",
-        "vimdoc",
-        "javascript",
-        "typescript",
-        "tsx",
-        "python",
-        "java",
-        "rust",
-        "html",
-        "css",
-        "json",
-        "toml",
-      }
-
       local ts = require("nvim-treesitter")
       ts.setup({})
-
-      local installed = ts.get_installed()
-      local missing = vim.tbl_filter(function(lang)
-        return not vim.list_contains(installed, lang)
-      end, languages)
-      if #missing > 0 then
-        ts.install(missing)
-      end
 
       vim.api.nvim_create_autocmd("FileType", {
         pattern = {
@@ -54,8 +30,10 @@ return {
           "toml",
         },
         callback = function()
-          vim.treesitter.start()
-          vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+          local ok = pcall(vim.treesitter.start)
+          if ok then
+            vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+          end
         end,
       })
 

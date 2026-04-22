@@ -1,4 +1,8 @@
- -- Linha 1: Define o caminho para o lazy.nvim
+if vim.loader then
+  vim.loader.enable()
+end
+
+-- Linha 1: Define o caminho para o lazy.nvim
 
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 
@@ -47,11 +51,13 @@ vim.opt.termguicolors = true
 --numeros na lateral esquerda 
 vim.opt.number = true
 
+vim.opt.relativenumber = true
+
 --abilita highlight
 vim.opt.cursorline = true
 
 --configurar o highlight para apenas numeros
-vim.opt.cursorlineopt = "number"
+--vim.opt.cursorlineopt = "number"
 
 --define a largura da indentação
 vim.opt.shiftwidth = 2
@@ -64,8 +70,14 @@ vim.opt.expandtab = true
 
 vim.opt.timeoutlen = 300
 
- --path do python
-vim.g.python3_host_prog = "C:\\Users\\joaog\\AppData\\Local\\Programs\\Python\\Python313\\python.exe"
+--path do python
+local python_host = vim.fn.exepath("python3")
+if python_host == "" then
+  python_host = vim.fn.exepath("python")
+end
+if python_host ~= "" then
+  vim.g.python3_host_prog = python_host
+end
 
 --fuction para mudar a cor do highlight do numero da linha
 vim.api.nvim_create_autocmd("ColorScheme", {

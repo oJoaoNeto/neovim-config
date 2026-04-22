@@ -1,4 +1,5 @@
-return {
+return {}
+--[[ return {
   'akinsho/bufferline.nvim',
   -- 'nvim-web-devicons' é necessário para os ícones
   dependencies = { 'nvim-tree/nvim-web-devicons' },
@@ -56,4 +57,4 @@ return {
       },
     },
   },
-}
+} ]]

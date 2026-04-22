@@ -147,6 +147,7 @@ return {
       }) ]]
       vim.lsp.config("basedpyright", {
         capabilities = capabilities,
+        single_file_support = true,
         root_markers = {
           "pyproject.toml",
           "setup.py",
@@ -173,6 +174,7 @@ return {
 
       vim.lsp.config("ruff", {
         capabilities = capabilities,
+        single_file_support = true,
       })
 
       vim.lsp.config("lua_ls", {
@@ -327,4 +329,5 @@ return {
     end,
   }
 }
+
 
