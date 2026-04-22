@@ -1,6 +1,7 @@
 return {
   {
     "nvim-treesitter/nvim-treesitter",
+    branch = "master",
     lazy = false,
     build = ":TSUpdate",
 
@@ -10,8 +11,32 @@ return {
     },
 
     config = function()
-      local ts = require("nvim-treesitter")
-      ts.setup({})
+      local ok_ts, ts = pcall(require, "nvim-treesitter")
+      local ok_configs, ts_configs = pcall(require, "nvim-treesitter.configs")
+
+      if ok_ts and type(ts.setup) == "function" then
+        ts.setup({})
+      elseif ok_configs then
+        ts_configs.setup({
+          autotag = { enable = true },
+          textobjects = {
+            select = {
+              enable = true,
+              lookahead = true,
+              keymaps = {
+                ["af"] = "@function.outer",
+                ["if"] = "@function.inner",
+                ["ac"] = "@class.outer",
+                ["ic"] = "@class.inner",
+              },
+            },
+            move = {
+              enable = true,
+              set_jumps = true,
+            },
+          },
+        })
+      end
 
       vim.api.nvim_create_autocmd("FileType", {
         pattern = {
@@ -37,22 +62,26 @@ return {
         end,
       })
 
-      require("nvim-ts-autotag").setup()
+      pcall(function()
+        require("nvim-ts-autotag").setup()
+      end)
 
-      require("nvim-treesitter-textobjects").setup({
-        select = {
-          lookahead = true,
-          keymaps = {
-            ["af"] = "@function.outer",
-            ["if"] = "@function.inner",
-            ["ac"] = "@class.outer",
-            ["ic"] = "@class.inner",
+      if ok_ts and not ok_configs then
+        require("nvim-treesitter-textobjects").setup({
+          select = {
+            lookahead = true,
+            keymaps = {
+              ["af"] = "@function.outer",
+              ["if"] = "@function.inner",
+              ["ac"] = "@class.outer",
+              ["ic"] = "@class.inner",
+            },
           },
-        },
-        move = {
-          set_jumps = true,
-        },
-      })
+          move = {
+            set_jumps = true,
+          },
+        })
+      end
 
       vim.keymap.set({ "n", "x", "o" }, "]m", function()
         require("nvim-treesitter-textobjects.move").goto_next_start("@function.outer", "textobjects")

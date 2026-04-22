@@ -10,7 +10,7 @@ return {
     { [[<c-\>]], "<cmd>ToggleTerm<cr>", desc = "ToggleTerm (Ctrl+\\)" },
   },
   opts = {
-    size = 20,
+    size = 30,
     open_mapping = [[<c-\>]],
     hide_numbers = true,
     shade_filetypes = {},

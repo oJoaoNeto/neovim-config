@@ -58,8 +58,8 @@ return {
     vim.api.nvim_create_autocmd("BufWritePost", {
       callback = function()
         -- Pega apenas o nome do arquivo (sem o caminho completo)
-        local filename = vim.fn.expand("%:t") 
-        
+        local filename = vim.fn.expand("%:t")
+
         -- Envia a notificação bonita
         vim.notify("Save!!", "info", {
           title = filename,
