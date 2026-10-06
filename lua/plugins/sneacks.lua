@@ -46,12 +46,20 @@ return {
 
     -- Outras configurações
     bigfile = { enabled = true },
-    explorer = { enabled = false },
-    indent = { enabled = true },
-    input = { enabled = true },   -- Permite que o Copilot use Snacks para inputs (ex: nomear conversa)
-    select = { enabled = true },  -- Permite que o Copilot use Snacks para menus
-    picker = { enabled = true, ui_select = true }, -- A MÁGICA: Substitui o menu padrão pelo Snacks Picker
-    notifier = { enabled = true },
+    indent = {
+      enabled = true,
+      only_scope = true,   -- Remove as marcações de fundo e exibe APENAS a indentação do escopo/bloco atual
+      only_current = true, -- Apenas no buffer ativo
+      scope = {
+        enabled = true,
+        char = "│",        -- Linha contínua destacando o bloco atual onde o cursor está
+        underline = false,
+      },
+    },
+    input = { enabled = false },  -- Desativa a caixa flutuante de criação de arquivo / input
+    select = { enabled = false }, -- Desativa popups de select
+    picker = { enabled = true, ui_select = false }, -- Picker leve para busca
+    notifier = { enabled = false }, -- Notificações visuais flutuantes desativadas
     quickfile = { enabled = true },
     scope = { enabled = false },
     scroll = { enabled = false },

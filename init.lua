@@ -2,98 +2,82 @@ if vim.loader then
   vim.loader.enable()
 end
 
--- Linha 1: Define o caminho para o lazy.nvim
+-- 0. Desativa provedores legados para evitar busca de executáveis no Windows (ganho de velocidade)
+vim.g.loaded_ruby_provider = 0
+vim.g.loaded_perl_provider = 0
+vim.g.loaded_node_provider = 0
 
+-- 1. Define as teclas líder (Obrigatório ser ANTES de carregar plugins)
+vim.g.mapleader = " "
+vim.g.maplocalleader = "\\"
+
+-- 2. Desativa o comportamento padrão do Espaço (pular caracteres)
+-- Isso evita que ele mova o cursor enquanto espera pelo Which-Key
+vim.keymap.set({ 'n', 'v' }, '<Space>', '<Nop>', { silent = true })
+
+-- 3. Carrega os mapeamentos principais imediatamente
+require("core.keymaps")
+
+-- 4. Define o caminho para o lazy.nvim
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 
--- 2. "Bootstrap" - Instala o lazy.nvim se ele não existir
-
+-- 5. \"Bootstrap\" - Instala o lazy.nvim se ele não existir
 if not (vim.uv or vim.loop).fs_stat(lazypath) then
-
-
   local lazyrepo = "https://github.com/folke/lazy.nvim.git"
-
-
   local out = vim.fn.system({ "git", "clone",
-
     "--filter=blob:none", "--branch=stable",
-
     lazyrepo, lazypath })
 
-
   if vim.v.shell_error ~= 0 then
-
     vim.api.nvim_echo({
-
       { "Failed to clone lazy.nvim:\n", "ErrorMsg" },
-
       { out, "WarningMsg" },
-
       { "\nPress any key to exit..." },
-
     }, true, {})
-
     vim.fn.getchar()
-
     os.exit(1)
-
   end
-
 end
 vim.opt.rtp:prepend(lazypath)
 
---desativa a quebra de linha
+-- Adiciona Mason e MSYS2 ao PATH (importante para o Windows encontrar compiladores e ferramentas)
+local mason_path = vim.fn.stdpath("data") .. "/mason/bin"
+local msys_path = "C:\\msys64\\mingw64\\bin;C:\\msys64\\clang64\\bin;C:\\msys64\\usr\\bin"
+if vim.fn.has("win32") == 1 then
+  vim.env.PATH = mason_path .. ";" .. msys_path .. ";" .. vim.env.PATH
+else
+  vim.env.PATH = mason_path .. ":" .. vim.env.PATH
+end
+
+-- CONFIGURAÇÕES GERAIS
 vim.opt.wrap = false
-
---ativa suporte a cores hexadecimais
 vim.opt.termguicolors = true
-
---numeros na lateral esquerda 
 vim.opt.number = true
-
 vim.opt.relativenumber = true
 
---abilita highlight
+-- Abrir novas janelas sempre embaixo e à direita
+vim.opt.splitbelow = true
+vim.opt.splitright = true
+
 vim.opt.cursorline = true
-
---configurar o highlight para apenas numeros
---vim.opt.cursorlineopt = "number"
-
---define a largura da indentação
+vim.opt.cursorlineopt = "number"
 vim.opt.shiftwidth = 2
-
---define o tamanho de um tab 
 vim.opt.tabstop = 2
-
---define que <tab> deve inserir espaços em vez de um caractere <tab>
 vim.opt.expandtab = true
-
 vim.opt.timeoutlen = 300
+vim.opt.updatetime = 250
+vim.opt.redrawtime = 1500
 
---path do python
-local python_host = vim.fn.exepath("python3")
-if python_host == "" then
-  python_host = vim.fn.exepath("python")
-end
-if python_host ~= "" then
-  vim.g.python3_host_prog = python_host
-end
+-- Path do python (estático para evitar varredura síncrona lenta de PATH no Windows)
+vim.g.python3_host_prog = "python"
 
---fuction para mudar a cor do highlight do numero da linha
+-- Cores customizadas
 vim.api.nvim_create_autocmd("ColorScheme", {
-
   pattern = "*",
-
   callback = function()
-
-    vim.api.nvim_set_hl(0,"CursorLineNr", {fg = "white"})
-
-    end,
-
+    vim.api.nvim_set_hl(0, "CursorLineNr", { fg = "white" })
+  end,
 })
-vim.g.mapleader = " "
-
-vim.g.maplocalleader = "\\"
 
 -- Configuração específica para Windows (PowerShell)
 if vim.fn.has("win32") == 1 then
@@ -103,37 +87,19 @@ if vim.fn.has("win32") == 1 then
   vim.opt.shellxquote = ""
 end
 
-
-require("core.keymaps")
 -- Setup lazy.nvim
-
 require("lazy").setup({
-
   spec = {
-
-    -- importe seus plugins
-
     { import = "plugins" },
     { "dstein64/vim-startuptime", cmd = "StartupTime" },
-
   },
-
-  change_detection = {
-    notify = false,
-  },
-
-  checker = { enabled = true, frequency = 86400 },
-
+  change_detection = { notify = false },
+  checker = { enabled = false },
   performance = {
     rtp = {
       disabled_plugins = {
-        "netrwPlugin",
-        "gzip",
-        "zipPlugin",
-        "tarPlugin",
-        "tutor",
+        "netrwPlugin", "gzip", "zipPlugin", "tarPlugin", "tutor",
       },
     },
   },
 })
-

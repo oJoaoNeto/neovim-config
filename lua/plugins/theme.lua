@@ -1,7 +1,7 @@
 return {
   "catppuccin/nvim",
   name = "catppuccin",
-  event = "VimEnter",
+  lazy = false,
   priority = 1000,
 
   config = function()
@@ -35,6 +35,10 @@ return {
         "EndOfBuffer",
         "MsgArea",
         "WinSeparator",
+        "NotifyBackground",
+        "NotifyINFOBorder",
+        "NotifyINFOTitle",
+        "NotifyINFOIcon",
       }
 
       for _, group in ipairs(groups) do

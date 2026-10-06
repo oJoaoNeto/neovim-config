@@ -1,7 +1,7 @@
 return {
   -- 1) Mason
   { "mason-org/mason.nvim", cmd = "Mason", opts = {} },
-
+  
   {
     "mason-org/mason-lspconfig.nvim",
     event = { "BufReadPre", "BufNewFile" },
@@ -10,7 +10,7 @@ return {
       "neovim/nvim-lspconfig",
       "hrsh7th/cmp-nvim-lsp",
     },
-
+    
     init = function()
       vim.diagnostic.config({
         update_in_insert = false,
@@ -92,6 +92,12 @@ return {
         root_markers = { "package.json", "tsconfig.json", "jsconfig.json", ".git" },
       })
 
+      -- Php (Intelephense)
+      vim.lsp.config("intelephense", {
+        capabilities = capabilities,
+        root_markers = { "composer.json", ".git", "index.php" },
+      })
+
       -- Tailwind (autocomplete de classes + regex pra cn/clsx/cva/twMerge)
       vim.lsp.config("tailwindcss", {
         capabilities = capabilities,
@@ -140,12 +146,14 @@ return {
         filetypes = { "html", "css", "javascriptreact", "typescriptreact" },
       })
 
-      --[[ vim.lsp.config("pyrefly", {
+      vim.lsp.config("pyrefly", {
         capabilities = capabilities,
-        cmd = { "pyrefly", "lsp" },
-        root_markers = {"pyproject.toml", "manage.py", "venv", ".git"},
-      }) ]]
-      vim.lsp.config("basedpyright", {
+        cmd = { "py", "-3.13", "-m", "pyrefly", "lsp" },
+        single_file_support = true,
+        root_markers = { "pyproject.toml", "setup.py", "setup.cfg", "requirements.txt", "manage.py", ".git" },
+      })
+      -- basedpyright (config antiga para referência)
+      --[[ vim.lsp.config("basedpyright", {
         capabilities = capabilities,
         single_file_support = true,
         root_markers = {
@@ -170,11 +178,46 @@ return {
             },
           },
         },
-      })
+      }) ]]
 
+      -- ty (config antiga, mantida comentada)
+      --[[ vim.lsp.config("ty", {
+        capabilities = capabilities,
+        cmd = { "py", "-m", "ty", "server" },
+        single_file_support = true,
+        root_markers = {
+          "ty.toml",
+          "pyproject.toml",
+          "setup.py",
+          "setup.cfg",
+          "requirements.txt",
+          ".git",
+        },
+        settings = {
+          ty = {
+            diagnosticMode = "workspace",
+            completions = {
+              autoImport = false,
+            },
+          },
+        },
+      })
+      vim.lsp.enable("ty") ]]
+
+      -- ruff (config antiga para referência)
+      --[[ vim.lsp.config("ruff", {
+        capabilities = capabilities,
+        single_file_support = true,
+      }) ]]
       vim.lsp.config("ruff", {
         capabilities = capabilities,
         single_file_support = true,
+        init_options = {
+          settings = {
+            organizeImports = true,
+            fixAll = true,
+          },
+        },
       })
 
       vim.lsp.config("lua_ls", {
@@ -185,14 +228,28 @@ return {
       vim.lsp.config("clangd", {
         capabilities = capabilities,
         cmd = {
-        "clangd",
-        "--background-index",
-        "--clang-tidy",
-        "--header-insertion=never",
-        "--log=error"
+          "clangd",
+          "--background-index",
+          "--clang-tidy",
+          "--header-insertion=never",
+          "--log=error",
+          "--offset-encoding=utf-16",
+          "--limit-results=100",
+          -- Query driver para MSYS2 (MinGW e Clang)
+          "--query-driver=C:/msys64/mingw64/bin/gcc.exe,C:/msys64/mingw64/bin/g++.exe,C:/msys64/clang64/bin/clang.exe,C:/msys64/clang64/bin/clang++.exe",
+        },
+        -- Fallback manual caso o query-driver falhe (Garante que stdio.h seja achado)
+        initialization_options = {
+          fallbackFlags = {
+            "-isystem", "C:/msys64/mingw64/include",
+            "-isystem", "C:/msys64/mingw64/x86_64-w64-mingw32/include",
+            "-isystem", "C:/msys64/clang64/include",
+          },
         },
       })
-
+      vim.lsp.config("arduino",{
+        capabilities = capabilities
+      })
       --[[ vim.lsp.config("rust_analyzer", {
         capabilities = capabilities,
         cmd = { "rustup", "run", "stable", "rust-analyzer" },
@@ -203,7 +260,8 @@ return {
       -- Instala e auto-enable (via vim.lsp.enable) — exclui jdtls (você usa no ftplugin)
       local ensure = {
         "lua_ls",
-        "basedpyright",
+        -- "basedpyright",
+        "pyrefly",
         "ruff",
         "clangd",
         ts_server,
@@ -214,12 +272,13 @@ return {
         "jsonls",
         "emmet_ls",
         "rust_analyzer",
+        "intelephense",
       }
 
       require("mason-lspconfig").setup({
         ensure_installed = ensure,
         automatic_enable = {
-          exclude = { "jdtls", "pyrefly", "rust_analyzer" },
+          exclude = { "jdtls", "rust_analyzer", "basedpyright", "ty" },
         },
       })
     end,
@@ -228,7 +287,7 @@ return {
   -- 3) Autocomplete (mantive seu setup, só “limpei” formatação)
   {
     "hrsh7th/nvim-cmp",
-    event = { "InsertEnter", "CmdlineEnter" },
+    event = { "BufReadPre", "BufNewFile" },
     dependencies = {
       "hrsh7th/cmp-nvim-lsp",
       "hrsh7th/cmp-buffer",
@@ -267,6 +326,14 @@ return {
       end
 
       cmp.setup({
+        -- Performance máxima: debounce rápido, limite de renderização de itens na tela
+        performance = {
+          debounce = 40,
+          throttle = 20,
+          fetching_timeout = 200,
+          max_view_entries = 20,
+        },
+
         snippet = {
           expand = function(args)
             luasnip.lsp_expand(args.body)
@@ -277,12 +344,18 @@ return {
           ["<C-k>"] = cmp.mapping.scroll_docs(-4),
           ["<C-j>"] = cmp.mapping.scroll_docs(4),
           ["<C-Space>"] = cmp.mapping.complete(),
-          ["<CR>"] = cmp.mapping.confirm({ select = true }),
+          ["<CR>"] = cmp.mapping(function(fallback)
+            if cmp.visible() and cmp.get_selected_entry() then
+              cmp.confirm({ select = false })
+            else
+              fallback()
+            end
+          end, { "i", "s" }),
 
           ["<Tab>"] = cmp.mapping(function(fallback)
             if cmp.visible() then
               cmp.select_next_item()
-            elseif luasnip.expand_or_jumpable() then
+            elseif luasnip.expand_or_locally_jumpable() then
               luasnip.expand_or_jump()
             else
               fallback()
@@ -300,12 +373,28 @@ return {
           end, { "i", "s" }),
         }),
 
+        -- Fontes balanceadas e com limites de itens para resposta instantânea
         sources = cmp.config.sources({
-          { name = "nvim_lsp", priority = 1000 },
-          { name = "luasnip", priority = 750 },
-          { name = "buffer", priority = 500 },
-          { name = "path", priority = 250 },
+          { name = "nvim_lsp", priority = 1000, max_item_count = 15 },
+          { name = "luasnip", priority = 750, max_item_count = 4 },
+          { name = "buffer", priority = 500, keyword_length = 3, max_item_count = 4 },
+          { name = "path", priority = 250, max_item_count = 3 },
         }),
+
+        -- Ordenação inteligente de relevância
+        sorting = {
+          priority_weight = 2,
+          comparators = {
+            cmp.config.compare.offset,
+            cmp.config.compare.exact,
+            cmp.config.compare.score,
+            cmp.config.compare.recently_used,
+            cmp.config.compare.locality,
+            cmp.config.compare.kind,
+            cmp.config.compare.length,
+            cmp.config.compare.order,
+          },
+        },
 
         window = {
           completion = {
@@ -322,6 +411,9 @@ return {
         formatting = {
           format = function(entry, item)
             item.menu = source_menu[entry.source.name]
+            if item.abbr and #item.abbr > 40 then
+              item.abbr = string.sub(item.abbr, 1, 37) .. "..."
+            end
             return tw_formatter(entry, item)
           end,
         },

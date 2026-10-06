@@ -46,7 +46,8 @@ return {
     },
     window = {
       position = 'left',
-      width = 30,
+      width = 40,
+      auto_expand_width = true,
       border = 'rounded',
       padding_top = 1,
       padding_bottom = 1,
@@ -96,7 +97,7 @@ return {
     enable_git_status = true,
     enable_diagnostics = true,
     use_popups_for_input = false,
-    use_default_for_input = false,
+    use_default_for_input = true,
   },
 
   config = function(_, opts)

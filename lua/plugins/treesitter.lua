@@ -1,74 +1,50 @@
 return {
   {
     "nvim-treesitter/nvim-treesitter",
-    branch = "master",
-    lazy = false,
+    -- Usamos a branch 'master' pois ela é a versão legada compatível com Neovim 0.11
+    branch = "master", 
     build = ":TSUpdate",
-
+    event = { "BufReadPost", "BufNewFile" },
+    cmd = { "TSUpdate", "TSInstall" },
     dependencies = {
       "nvim-treesitter/nvim-treesitter-textobjects",
       "windwp/nvim-ts-autotag",
     },
-
     config = function()
-      local ok_ts, ts = pcall(require, "nvim-treesitter")
-      local ok_configs, ts_configs = pcall(require, "nvim-treesitter.configs")
-
-      if ok_ts and type(ts.setup) == "function" then
-        ts.setup({})
-      elseif ok_configs then
-        ts_configs.setup({
-          autotag = { enable = true },
-          textobjects = {
-            select = {
-              enable = true,
-              lookahead = true,
-              keymaps = {
-                ["af"] = "@function.outer",
-                ["if"] = "@function.inner",
-                ["ac"] = "@class.outer",
-                ["ic"] = "@class.inner",
-              },
-            },
-            move = {
-              enable = true,
-              set_jumps = true,
-            },
-          },
-        })
+      -- Configurações específicas para Windows
+      local install_ok, install = pcall(require, 'nvim-treesitter.install')
+      if install_ok then
+        install.prefer_git = false
+        install.compilers = { "gcc", "clang" }
       end
 
-      vim.api.nvim_create_autocmd("FileType", {
-        pattern = {
-          "lua",
-          "vim",
-          "help",
-          "javascript",
-          "typescript",
-          "typescriptreact",
-          "python",
-          "java",
-          "rust",
-          "html",
-          "css",
-          "json",
-          "toml",
+      -- Proteção contra crash: Só tenta configurar se o módulo existir
+      -- Isso permite que o Neovim abra para que você possa rodar :Lazy sync
+      local status, configs = pcall(require, "nvim-treesitter.configs")
+      if not status then
+        print("Aguardando download da branch master do Treesitter... Rode :Lazy sync")
+        return
+      end
+
+      configs.setup({
+        parser_install_dir = vim.fn.stdpath("data") .. "/site",
+        ensure_installed = {
+          "php", "javascript", "typescript", "tsx", "python", 
+          "java", "rust", "html", "css", "json", "toml", "cpp", "c", "bash"
         },
-        callback = function()
-          local ok = pcall(vim.treesitter.start)
-          if ok then
-            vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
-          end
-        end,
-      })
-
-      pcall(function()
-        require("nvim-ts-autotag").setup()
-      end)
-
-      if ok_ts and not ok_configs then
-        require("nvim-treesitter-textobjects").setup({
+        sync_install = false,
+        auto_install = true,
+        highlight = {
+          enable = true,
+          additional_vim_regex_highlighting = false,
+        },
+        indent = { 
+          enable = false,
+        },
+        autotag = { enable = true },
+        textobjects = {
           select = {
+            enable = true,
             lookahead = true,
             keymaps = {
               ["af"] = "@function.outer",
@@ -78,24 +54,19 @@ return {
             },
           },
           move = {
+            enable = true,
             set_jumps = true,
+            goto_next_start = {
+              ["]m"] = "@function.outer",
+              ["]c"] = "@class.outer",
+            },
+            goto_previous_start = {
+              ["[m"] = "@function.outer",
+              ["[c"] = "@class.outer",
+            },
           },
-        })
-      end
-
-      vim.keymap.set({ "n", "x", "o" }, "]m", function()
-        require("nvim-treesitter-textobjects.move").goto_next_start("@function.outer", "textobjects")
-      end)
-      vim.keymap.set({ "n", "x", "o" }, "]c", function()
-        require("nvim-treesitter-textobjects.move").goto_next_start("@class.outer", "textobjects")
-      end)
-      vim.keymap.set({ "n", "x", "o" }, "[m", function()
-        require("nvim-treesitter-textobjects.move").goto_previous_start("@function.outer", "textobjects")
-      end)
-      vim.keymap.set({ "n", "x", "o" }, "[c", function()
-        require("nvim-treesitter-textobjects.move").goto_previous_start("@class.outer", "textobjects")
-      end)
+        },
+      })
     end,
   },
 }
-

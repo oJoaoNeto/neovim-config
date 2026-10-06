@@ -1,4 +1,3 @@
-
 -- 0) Evita reexecutar tudo no mesmo buffer (se já tem jdtls neste buffer, sai)
 local clients = vim.lsp.get_clients({ bufnr = 0, name = "jdtls" })
 if clients and #clients > 0 then
@@ -73,6 +72,12 @@ if not java_cmd or java_cmd == "" then
 end
 
 -- 6) Config do JDTLS
+local ok_cmp, cmp_lsp = pcall(require, "cmp_nvim_lsp")
+local capabilities = ok_cmp and cmp_lsp.default_capabilities() or vim.lsp.protocol.make_client_capabilities()
+
+local extendedClientCapabilities = jdtls.extendedClientCapabilities
+extendedClientCapabilities.resolveAdditionalTextEditsSupport = true
+
 local config = {
   cmd = {
     java_cmd,
@@ -87,11 +92,16 @@ local config = {
     "-Dlog.protocol=false",
     "-Dlog.level=WARN",
 
-    "-Xms256m",
-    "-Xmx1024m",
+    -- Configurações de Memória do Zed/VSCode para Windows (evita vazamento de memória com JARs no Windows)
+    "-Dsun.zip.disableMemoryMapping=true",
 
-    -- Em vez de ALL-SYSTEM (carrega até incubator modules), dá pra usar java.se (mais leve)
-    "--add-modules=java.se",
+    "-Xms512m",
+    "-Xmx2048m", -- 2GB de RAM (ideal para PC de 12GB RAM, impedindo OutOfMemory em Spring Boot)
+    "-XX:+UseG1GC",
+    "-XX:+UseStringDeduplication",
+
+    -- Necessário ALL-SYSTEM para as versões novas do JDTLS (e.g. 1.60+) resolverem os bundles do Eclipse
+    "--add-modules=ALL-SYSTEM",
     "--add-opens", "java.base/java.util=ALL-UNNAMED",
     "--add-opens", "java.base/java.lang=ALL-UNNAMED",
 
@@ -101,11 +111,7 @@ local config = {
   },
 
   root_dir = root_dir,
-
-  flags = {
-    allow_incremental_sync = true,
-    debounce_text_changes = 300,
-  },
+  capabilities = capabilities,
 
   settings = {
     java = {
@@ -113,9 +119,14 @@ local config = {
       contentProvider = { preferred = "fernflower" },
 
       configuration = {
-        updateBuildConfiguration = "interactive", -- evita rebuild agressivo
+        updateBuildConfiguration = "automatic",
         runtimes = {},
       },
+
+      -- Desativar lentes de código (CodeLens) e hints que pesam processamento/memória em background
+      referencesCodeLens = { enabled = false },
+      implementationsCodeLens = { enabled = false },
+      inlayHints = { parameterNames = { enabled = "none" } },
 
       -- Maven + Gradle
       import = {
@@ -144,7 +155,7 @@ local config = {
 
   init_options = {
     bundles = {},
-    extendedClientCapabilities = jdtls.extendedClientCapabilities,
+    extendedClientCapabilities = extendedClientCapabilities,
   },
 }
 
@@ -157,6 +168,7 @@ local map = function(mode, lhs, rhs, desc)
 end
 
 map("n", "<leader>jo", jdtls.organize_imports, "Organizar imports")
+map("n", "<leader>ju", "<cmd>JdtUpdateConfig<cr>", "Atualizar projeto / classes")
 map("v", "<leader>jv", function() jdtls.extract_variable(true) end, "Extrair variável")
 map("v", "<leader>jm", function() jdtls.extract_method(true) end, "Extrair método")
 map("n", "<leader>jd", vim.lsp.buf.declaration, "Declaração")
@@ -170,4 +182,3 @@ vim.opt_local.shiftwidth = 4
 vim.opt_local.expandtab = true
 
 vim.notify(("JDTLS iniciado: %s"):format(root_dir), vim.log.levels.INFO)
-

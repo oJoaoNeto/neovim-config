@@ -1,3 +1,5 @@
+-- Noice desativado (comentado) para usar a linha de comando clássica e limpa na barra inferior do Neovim
+--[[
 return {
   "folke/noice.nvim",
   event = "VeryLazy",
@@ -8,9 +10,9 @@ return {
 
   opts = {
     lsp = {
-    override = {
-      ["vim.lsp.util.convert_input_to_markdown_lines"] = true,
-      ["vim.lsp.util.stylize_markdown"] = true,
+      override = {
+        ["vim.lsp.util.convert_input_to_markdown_lines"] = true,
+        ["vim.lsp.util.stylize_markdown"] = true,
       },
     },
     views = {
@@ -29,7 +31,6 @@ return {
       },
     },
     routes = {
-      -- 1. Ignorar mensagem de reload do Lazy
       {
         filter = {
           event = "notify",
@@ -37,35 +38,20 @@ return {
         },
         opts = { skip = true },
       },
-
-      -- 2. ESCONDER a mensagem de save padrão do Neovim
-      -- (Nós vamos criar a nossa própria mais bonita abaixo)
       {
         filter = {
           event = "msg_show",
           find = "written",
         },
-        opts = { skip = true }, -- Aqui escondemos a original feia
+        opts = { skip = true },
       },
     },
   },
 
-  -- AQUI ESTÁ A MÁGICA
   config = function(_, opts)
     require("noice").setup(opts)
-
-    -- Criamos um Autocomando que roda toda vez que você salva
-    vim.api.nvim_create_autocmd("BufWritePost", {
-      callback = function()
-        -- Pega apenas o nome do arquivo (sem o caminho completo)
-        local filename = vim.fn.expand("%:t")
-
-        -- Envia a notificação bonita
-        vim.notify("Save!!", "info", {
-          title = filename,
-          timeout = 2000, -- Some depois de 2 segundos
-        })
-      end,
-    })
   end,
 }
+]]
+
+return {}
