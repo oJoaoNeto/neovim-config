@@ -1,7 +1,7 @@
 return {
   'numToStr/Comment.nvim',
   event = "VeryLazy", -- Carrega quando for necessário
-  
+
   -- 'opts' é uma forma mais limpa de passar a configuração para o 'setup'
   opts = {
     -- Mapeamentos

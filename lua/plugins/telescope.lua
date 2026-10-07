@@ -1,4 +1,3 @@
-
 return {
   'nvim-telescope/telescope.nvim',
   tag = '0.1.8',
@@ -34,10 +33,30 @@ return {
       end,
       desc = 'Telescope current buffer fuzzy find'
     },
+    { '<leader>fk',
+      function()
+        require('telescope.builtin').keymaps()
+      end,
+      desc = 'Telescope keymaps'
+    },
+    { '<leader>fm',
+      function()
+        require('telescope.builtin').commands()
+      end,
+      desc = 'Telescope commands'
+    },
   },
 
   config = function()
-
-    require('telescope').setup({})
+    require('telescope').setup({
+      defaults = {
+        mappings = {
+          i = {
+            ["<C-j>"] = "move_selection_next",
+            ["<C-k>"] = "move_selection_previous",
+          }
+        }
+      }
+    })
   end
 }
