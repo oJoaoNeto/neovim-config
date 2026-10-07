@@ -40,14 +40,9 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
--- Adiciona Mason e MSYS2 ao PATH (importante para o Windows encontrar compiladores e ferramentas)
+-- Adiciona Mason ao PATH
 local mason_path = vim.fn.stdpath("data") .. "/mason/bin"
-local msys_path = "C:\\msys64\\mingw64\\bin;C:\\msys64\\clang64\\bin;C:\\msys64\\usr\\bin"
-if vim.fn.has("win32") == 1 then
-  vim.env.PATH = mason_path .. ";" .. msys_path .. ";" .. vim.env.PATH
-else
-  vim.env.PATH = mason_path .. ":" .. vim.env.PATH
-end
+vim.env.PATH = mason_path .. ":" .. vim.env.PATH
 
 -- CONFIGURAÇÕES GERAIS
 vim.opt.wrap = false
