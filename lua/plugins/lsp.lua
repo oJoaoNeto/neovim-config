@@ -146,9 +146,13 @@ return {
         filetypes = { "html", "css", "javascriptreact", "typescriptreact" },
       })
 
+      local pyrefly_cmd = vim.fn.has("win32") == 1
+        and { "py", "-3.13", "-m", "pyrefly", "lsp" }
+        or { "python3", "-m", "pyrefly", "lsp" }
+
       vim.lsp.config("pyrefly", {
         capabilities = capabilities,
-        cmd = { "py", "-3.13", "-m", "pyrefly", "lsp" },
+        cmd = pyrefly_cmd,
         single_file_support = true,
         root_markers = { "pyproject.toml", "setup.py", "setup.cfg", "requirements.txt", "manage.py", ".git" },
       })
@@ -225,27 +229,36 @@ return {
         settings = { Lua = { diagnostics = { globals = { "vim" } } } },
       })
 
-      vim.lsp.config("clangd", {
-        capabilities = capabilities,
-        cmd = {
-          "clangd",
-          "--background-index",
-          "--clang-tidy",
-          "--header-insertion=never",
-          "--log=error",
-          "--offset-encoding=utf-16",
-          "--limit-results=100",
-          -- Query driver para MSYS2 (MinGW e Clang)
-          "--query-driver=C:/msys64/mingw64/bin/gcc.exe,C:/msys64/mingw64/bin/g++.exe,C:/msys64/clang64/bin/clang.exe,C:/msys64/clang64/bin/clang++.exe",
-        },
-        -- Fallback manual caso o query-driver falhe (Garante que stdio.h seja achado)
-        initialization_options = {
+      local clangd_cmd = {
+        "clangd",
+        "--background-index",
+        "--clang-tidy",
+        "--header-insertion=never",
+        "--log=error",
+        "--offset-encoding=utf-16",
+        "--limit-results=100",
+      }
+      if vim.fn.has("win32") == 1 then
+        table.insert(clangd_cmd, "--query-driver=C:/msys64/mingw64/bin/gcc.exe,C:/msys64/mingw64/bin/g++.exe,C:/msys64/clang64/bin/clang.exe,C:/msys64/clang64/bin/clang++.exe")
+      else
+        table.insert(clangd_cmd, "--query-driver=/usr/bin/gcc,/usr/bin/g++,/usr/bin/clang,/usr/bin/clang++")
+      end
+
+      local clangd_init_options = {}
+      if vim.fn.has("win32") == 1 then
+        clangd_init_options = {
           fallbackFlags = {
             "-isystem", "C:/msys64/mingw64/include",
             "-isystem", "C:/msys64/mingw64/x86_64-w64-mingw32/include",
             "-isystem", "C:/msys64/clang64/include",
           },
-        },
+        }
+      end
+
+      vim.lsp.config("clangd", {
+        capabilities = capabilities,
+        cmd = clangd_cmd,
+        initialization_options = clangd_init_options,
       })
       vim.lsp.config("arduino",{
         capabilities = capabilities
